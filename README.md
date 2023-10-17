@@ -11,7 +11,7 @@ $ npm run cdk deploy
 $ export VIRTUAL_CLUSTER_ID=xxxx EXECUTION_ROLE_ARN=xxxx
 ```
 
-### Run a test task
+### Run a test job
 
 ```sh
 $ aws s3 cp s3://aws-data-analytics-workshops/emr-eks-workshop/scripts/pi.py s3://<mybucket>/pi.py
