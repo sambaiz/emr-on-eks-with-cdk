@@ -4,7 +4,8 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as eks from 'aws-cdk-lib/aws-eks';
 import * as emrcontainers from 'aws-cdk-lib/aws-emrcontainers';
-import * as basex from 'base-x'
+import * as basex from 'base-x';
+import { KubectlV27Layer } from '@aws-cdk/lambda-layer-kubectl-v27';
 
 export class EmrOnEksWithCdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -25,7 +26,7 @@ export class EmrOnEksWithCdkStack extends cdk.Stack {
 
   createEKSCluster(clusterName: string) {
     const vpc = new ec2.Vpc(this, 'VPC', {
-      cidr: '10.18.0.0/18',
+      ipAddresses: ec2.IpAddresses.cidr('10.18.0.0/18'),
       maxAzs: 2,
       subnetConfiguration: [
         {
@@ -57,6 +58,7 @@ export class EmrOnEksWithCdkStack extends cdk.Stack {
       mastersRole,
       clusterName: clusterName,
       version: eks.KubernetesVersion.V1_27,
+      kubectlLayer: new KubectlV27Layer(this, 'KubectlLayer'),
       defaultCapacity: 3,
       defaultCapacityInstance: new ec2.InstanceType('m5.large')
     })
@@ -80,8 +82,10 @@ export class EmrOnEksWithCdkStack extends cdk.Stack {
         { apiGroups: [''], resources: ['secrets'], verbs: ['create', 'patch', 'delete', 'watch'] },
         { apiGroups: ['apps'], resources: ['statefulsets', 'deployments'], verbs: ['get', 'list', 'watch', 'describe', 'create', 'edit', 'delete', 'annotate', 'patch', 'label'] },
         { apiGroups: ['batch'], resources: ['jobs'], verbs: ['get', 'list', 'watch', 'describe', 'create', 'edit', 'delete', 'annotate', 'patch', 'label'] },
-        { apiGroups: ['extensions'], resources: ['ingresses'], verbs: ['get', 'list', 'watch', 'describe', 'create', 'edit', 'delete', 'annotate', 'patch', 'label'] },
+        { apiGroups: ['extensions', 'networking.k8s.io'], resources: ['ingresses'], verbs: ['get', 'list', 'watch', 'describe', 'create', 'edit', 'delete', 'annotate', 'patch', 'label'] },
         { apiGroups: ['rbac.authorization.k8s.io'], resources: ['roles', 'rolebindings'], verbs: ['get', 'list', 'watch', 'describe', 'create', 'edit', 'delete', 'deletecollection', 'annotate', 'patch', 'label'] },
+        { apiGroups: [''], resources: ['persistentvolumeclaims'], verbs: ['create', 'list', 'delete']},
+        { apiGroups: ['scheduling.volcano.sh'], resources: ['podgroups'], verbs: ['get', 'list', 'watch', 'create', 'delete', 'update']}
       ],
     });
     emrRole.node.addDependency(namespace)
