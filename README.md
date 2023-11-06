@@ -25,6 +25,14 @@ $ aws emr-containers start-job-run \
           "entryPoint": "s3://<mybucket>/pi.py",
           "sparkSubmitParameters": "--conf spark.executor.instances=1 --conf spark.executor.memory=2G --conf spark.executor.cores=1 --conf spark.driver.cores=1"
       }
+  }' \
+  --configuration-overrides '{
+    "monitoringConfiguration": {
+      "persistentAppUI": "ENABLED",
+      "s3MonitoringConfiguration": {
+        "logUri": "s3://<mybucket>"
+      }
+    }
   }'
   
 $ kubectl get pod -n emrcontainers
@@ -32,4 +40,8 @@ NAME                               READY   STATUS    RESTARTS   AGE
 000000032psj6spu6q7-5qpsg          2/2     Running   0          28s
 pythonpi-4b35838b3c9a1810-exec-1   1/1     Running   0          3s
 spark-000000032psj6spu6q7-driver   2/2     Running   0          17s
+
+$ aws s3 cp s3://<mybucket>/<cluster_id>/jobs/<job_id>/containers/spark-000000032psj6spu6q7/spark-000000032psj6spu6q7-driver/stdout.gz .
+$ gzcat stdout.gz
+Pi is roughly 3.140920
 ```
