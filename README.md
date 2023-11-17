@@ -32,14 +32,27 @@ $ aws emr-containers start-job-run \
       "s3MonitoringConfiguration": {
         "logUri": "s3://<mybucket>"
       }
-    }
+    },
+    "applicationConfiguration": [
+      {
+        "classification": "spark-defaults", 
+        "properties": {
+          "spark.dynamicAllocation.enabled":"true",
+          "spark.dynamicAllocation.shuffleTracking.enabled":"true",
+          "spark.dynamicAllocation.minExecutors":"1",
+          "spark.dynamicAllocation.maxExecutors":"100",
+          "spark.dynamicAllocation.initialExecutors":"1"
+         }
+      }
+    ]
   }'
   
 $ kubectl get pod -n emrcontainers
 NAME                               READY   STATUS    RESTARTS   AGE
-000000032psj6spu6q7-5qpsg          2/2     Running   0          28s
-pythonpi-4b35838b3c9a1810-exec-1   1/1     Running   0          3s
-spark-000000032psj6spu6q7-driver   2/2     Running   0          17s
+000000032u7ddboo153-p52fj          3/3     Running    0          53s
+pythonpi-a6561a8bc76bc424-exec-1   1/2     NotReady   0          25s
+pythonpi-a6561a8bc76bc424-exec-2   0/2     Pending    0          17s
+spark-000000032u7ddboo153-driver   1/2     NotReady   0          40s
 
 $ aws s3 cp s3://<mybucket>/<cluster_id>/jobs/<job_id>/containers/spark-000000032psj6spu6q7/spark-000000032psj6spu6q7-driver/stdout.gz .
 $ gzcat stdout.gz
